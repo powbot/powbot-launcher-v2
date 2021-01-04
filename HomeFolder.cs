@@ -1,20 +1,22 @@
 using System;
 using System.IO;
 
-namespace powbot_launcher_v2
+namespace PowBotLauncher
 {
     class HomeFolder
     {
-
-        public static string GetDirectory() {
+        public static string GetDirectory()
+        {
             string homeFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
             return Path.Combine(homeFolder, ".powbot");
         }
-        public static void Create()
+
+        public static void Create(Action<string> onStatusChange)
         {
-            string powbotHomeFolder = GetDirectory();
-            if (!Directory.Exists(powbotHomeFolder)) {
-                Console.WriteLine($"Creating powbot home directory at {powbotHomeFolder}");
+            var powbotHomeFolder = GetDirectory();
+            if (!Directory.Exists(powbotHomeFolder))
+            {
+                onStatusChange("Checking/creating PowBot directory...");
                 Directory.CreateDirectory(powbotHomeFolder);
             }
         }

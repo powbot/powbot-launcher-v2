@@ -3,17 +3,16 @@ using System.IO;
 using System.Net;
 using System.Security.Cryptography;
 
-namespace powbot_launcher_v2
+namespace PowBotLauncher
 {
     class Client
     {
-
         public static string GetDirectory()
         {
             return Path.Combine(HomeFolder.GetDirectory(), "client");
         }
 
-        private static string GetRemoteHash() 
+        private static string GetRemoteHash()
         {
             using (var client = new WebClient())
             {
@@ -21,50 +20,53 @@ namespace powbot_launcher_v2
             }
         }
 
-        private static void ObtainClient(string hash, string outputFile)
+        private static void ObtainClient(string hash, string outputFile, Action<string> onStatusChange)
         {
-            Console.WriteLine($"Downloading latest client: {hash}");
+            onStatusChange($"Downloading latest client: {hash}");
             using (var client = new WebClient())
             {
+                client.DownloadProgressChanged += (sender, args) =>
+                    onStatusChange($"Downloading latest client: {hash} ({args.ProgressPercentage}% completed)");
                 client.DownloadFile($"https://powbot.org/game/{hash}.jar", outputFile);
             }
-            
+
             if (!File.Exists(outputFile))
             {
-                Console.WriteLine("Failed to download client");
+                onStatusChange("Failed to download client");
                 Environment.Exit(255);
             }
         }
 
         private static string ComputeSha1Hash(string file)
         {
-            using (FileStream fs = File.OpenRead(file))
-            {
-                SHA1 sha = new SHA1Managed();
-                return BitConverter.ToString(sha.ComputeHash(fs)).Replace("-", "").ToLower();
-            }
+            using var fs = File.OpenRead(file);
+            var sha = new SHA1Managed();
+            return BitConverter.ToString(sha.ComputeHash(fs)).Replace("-", "").ToLower();
         }
 
-        public static string EnsureLatestClient()
+        public static string EnsureLatestClient(Action<string> onStatusChange)
         {
-            if (!Directory.Exists(GetDirectory())) {
+            if (!Directory.Exists(GetDirectory()))
+            {
                 Directory.CreateDirectory(GetDirectory());
             }
 
-            string expectedHash = GetRemoteHash();
-            string clientFile = Path.Combine(GetDirectory(), "PowBot.jar");
-            if (!File.Exists(clientFile)) {
-                Console.WriteLine("No client file found, downloading...");
-                ObtainClient(expectedHash, clientFile);
+            var expectedHash = GetRemoteHash();
+            var clientFile = Path.Combine(GetDirectory(), "PowBot.jar");
+            if (!File.Exists(clientFile))
+            {
+                onStatusChange("Local client not found - downloading...");
+                ObtainClient(expectedHash, clientFile, onStatusChange);
             }
 
-            string actualHash = ComputeSha1Hash(clientFile);
-            if (actualHash != expectedHash) {
-                ObtainClient(expectedHash, clientFile);
+            var actualHash = ComputeSha1Hash(clientFile);
+            if (actualHash != expectedHash)
+            {
+                onStatusChange("Local client out of date - downloading...");
+                ObtainClient(expectedHash, clientFile, onStatusChange);
             }
 
-            Console.WriteLine($"Using client: {ComputeSha1Hash(clientFile)}");
-
+            onStatusChange($"Using client {ComputeSha1Hash(clientFile)}");
             return clientFile;
         }
     }
