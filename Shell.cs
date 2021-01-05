@@ -3,27 +3,34 @@ using System.IO;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
 
 namespace PowBotLauncher
 {
     class Shell
     {
-        public static bool Execute(string process, string dir, bool background, IEnumerable<string> args)
+        public static bool Execute(string binary, string dir, bool background, IEnumerable<string> args)
         {
             try
             {
-                var p = new Process {StartInfo = new ProcessStartInfo(process)};
+                var process = new Process {StartInfo = new ProcessStartInfo(binary)};
                 foreach (var arg in args)
                 {
-                    p.StartInfo.ArgumentList.Add(arg);
+                    process.StartInfo.ArgumentList.Add(arg);
                 }
 
-                p.StartInfo.WorkingDirectory = dir;
-                p.StartInfo.CreateNoWindow = background;
-                p.StartInfo.RedirectStandardError = true;
-                p.StartInfo.RedirectStandardOutput = true;
-                p.StartInfo.RedirectStandardInput = true;
-                p.Start();
+                process.StartInfo.WorkingDirectory = dir;
+                process.StartInfo.CreateNoWindow = background;
+                process.StartInfo.UseShellExecute = background;
+                if (!background)
+                {
+                    process.StartInfo.RedirectStandardError = true;
+                    process.StartInfo.RedirectStandardOutput = true;
+                    process.StartInfo.RedirectStandardInput = true;
+                }
+
+                process.Start();
+                Thread.Sleep(1000);
             }
             catch (Exception e)
             {
@@ -33,4 +40,5 @@ namespace PowBotLauncher
             return false;
         }
     }
+
 }
