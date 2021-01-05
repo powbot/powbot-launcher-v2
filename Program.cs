@@ -1,19 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Logging.Serilog;
 
-namespace powbot_launcher_v2
+namespace PowBotLauncher
 {
     class Program
     {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("PowBot is starting...");
+        // Initialization code. Don't use any Avalonia, third-party APIs or any
+        // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
+        // yet and stuff might break.
+        public static void Main(string[] args) => BuildAvaloniaApp()
+            .StartWithClassicDesktopLifetime(args);
 
-            HomeFolder.Create();
-            string jreBinary = JRE.GetOrObtainJREBinary();
-            string clientFile = Client.EnsureLatestClient();
-            Shell.Execute(jreBinary, Client.GetDirectory(), true, new List<string> {"-jar", clientFile});
-        }
+        // Avalonia configuration, don't remove; also used by visual designer.
+        public static AppBuilder BuildAvaloniaApp()
+            => AppBuilder.Configure<App>()
+                .UsePlatformDetect()
+                .LogToDebug();
     }
 }
