@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using Microsoft.VisualBasic;
 
 namespace PowBotLauncher
 {
@@ -30,9 +34,22 @@ namespace PowBotLauncher
             {
                 HomeFolder.Create(SetStatus);
 
+
                 var jreBinary = JRE.GetOrObtainJREBinary(SetStatus);
                 var client = Client.EnsureLatestClient(SetStatus);
-                Shell.Execute(jreBinary, Client.GetDirectory(), true, new[] {"-jar", client});
+
+                var jvmArgsPath = Path.Combine(HomeFolder.GetDirectory(), "jvmargs.txt");
+                IEnumerable<string> jvmArgs = new[] {"-Xmx512M"};
+                if (File.Exists(jvmArgsPath))
+                {
+                    jvmArgs = File.ReadAllText(jvmArgsPath).Trim().Split(" ");
+                }
+                else
+                {
+                    File.WriteAllText(jvmArgsPath, Strings.Join(jvmArgs.ToArray()));
+                }
+
+                Shell.Execute(jreBinary, Client.GetDirectory(), true, jvmArgs.Append("-jar").Append(client));
                 Environment.Exit(0);
             });
         }

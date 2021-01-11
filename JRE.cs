@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Mono.Unix;
 using SharpCompress.Readers;
@@ -158,7 +159,8 @@ namespace PowBotLauncher
         private static string FindBinary(string sDir)
         {
             var binary = Directory.GetFiles(sDir, GetBinaryName(), SearchOption.AllDirectories).FirstOrDefault();
-            if (binary != null && !OperatingSystem.IsWindows())
+            var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            if (binary != null && !isWindows)
             {
                 var unixFileInfo = new UnixFileInfo(binary)
                 {
