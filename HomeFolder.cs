@@ -7,7 +7,7 @@ namespace PowBotLauncher
     {
         public static string GetDirectory()
         {
-            string homeFolder = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
+            string homeFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             return Path.Combine(homeFolder, ".powbot");
         }
 
